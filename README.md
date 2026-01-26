@@ -34,10 +34,12 @@ AI_Project_Templates/
 
 ## Installation
 
+Clone, fork or copy this repo to your development environment. Put it someplace easy to get to. You can install it into any 4D Project.
+
 ### Option A: Use the 4D installer method
 
 1. Copy `Install_AI_Templates.4dm` into your 4D project's `Project/Sources/Methods/` folder
-2. Run the method from within 4D
+2. Run the method within 4D
 3. Select this `AI_Project_Templates` folder when prompted
 4. All files are copied to the correct locations automatically
 
