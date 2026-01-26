@@ -1,6 +1,8 @@
 # AI Project Templates for 4D
 
-Context files that help AI coding tools (Claude Code, GitHub Copilot, etc.) write correct, modern 4D code.
+Context files that help AI coding tools (Claude Code, GitHub Copilot, etc.) write correct, modern 4D code. I am able to get good quality 4D code by providing this sort of context to CoPilot or Claude Code. These files give you a good starting point.
+
+They are strongly biased to using ORDA and modern 4D programming. If you are working in classic code they will still be useful. Install them in your project and engage with your AI about modifying them to prefer classic patterns. The really valuable work here is laying out fundamental 4D context.
 
 ## What's Included
 
