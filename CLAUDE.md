@@ -9,6 +9,14 @@ Copy this directory structure into the root of any new 4D project. The `CLAUDE.m
 ```
 YourProject/
   CLAUDE.md                              <-- this file (project root)
+  .github/
+    instructions/                        <-- specialized instruction files
+      4d.catalog.instructions.md         <-- catalog/structure editing
+      4d.instructions.md                 <-- core 4D language reference
+      4d.forms.instructions.md           <-- form design patterns
+      4d.errors.instructions.md          <-- error handling patterns
+      4dtest.md.instructions.md          <-- unit testing with 4DTest
+      formsSchema.json                   <-- JSON schema for form validation
   Project/
     Sources/
       Classes/CLAUDE.md                  <-- class-specific guidance
@@ -18,6 +26,18 @@ YourProject/
       DatabaseMethods/CLAUDE.md          <-- database method guidance
       Triggers/CLAUDE.md                 <-- trigger guidance
 ```
+
+### Database Structure (Catalog) Editing
+
+When you need to modify the database structure—adding/modifying tables, fields, relations, or indexes—refer to the comprehensive guide in `.github/instructions/4d.catalog.instructions.md`. This includes:
+
+- Complete field type reference and XML syntax
+- Table/field/relation patterns with UUIDs
+- Primary key and index requirements
+- Common pitfalls and solutions (text fields, relations, missing indexes)
+- Migration patterns from Qodly models
+
+**Important:** Always consult this guide before editing `catalog.4DCatalog` directly to avoid structure corruption or import errors.
 
 ---
 

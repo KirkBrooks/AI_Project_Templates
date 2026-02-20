@@ -30,6 +30,13 @@ If (Not($templateFolder.file("CLAUDE.md").exists))
 	return
 End if
 
+//  verify .github/instructions exists
+var $githubInstructions : 4D.Folder:=$templateFolder.folder(".github").folder("instructions")
+If (Not($githubInstructions.exists))
+	ALERT("The selected folder does not contain .github/instructions/.\nPlease select the AI_Project_Templates folder.")
+	return
+End if
+
 //  target: database root folder
 //  Filesystem path refs (/PROJECT/) are top-level in 4D's virtual filesystem.
 //  .parent returns Null on them. Convert to platform path first.
@@ -83,8 +90,8 @@ While ($queue.length>0)
 
 	$subDirs:=$srcDir.folders()
 	For each ($sub; $subDirs)
-		//  skip hidden folders
-		If ($sub.fullName[[1]]#".")
+		//  include .github folder, skip other hidden folders
+		If (($sub.name=".github") | ($sub.fullName[[1]]#"."))
 			If ($isFormsDir)
 				//  Forms: copy form subfolders as complete units
 				If (Not($destDir.exists))
