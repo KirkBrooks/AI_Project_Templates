@@ -14,6 +14,8 @@
 	 Hidden files and folders (names starting with ".") are skipped.
 
 	 Usage: Copy this method into any 4D project and run it once.
+       Tip: Make sure to back up your project before running this method.
+            You can run it again later to update templates as needed.
 */
 
 var $templatePath : Text:=Select folder("Select the AI_Project_Templates folder:")
