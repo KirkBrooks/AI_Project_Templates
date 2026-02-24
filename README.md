@@ -45,7 +45,17 @@ Clone, fork or copy this repo to your development environment. Put it someplace 
 
 The installer walks the entire template tree, copies all files, and creates any missing directories. Form folders (under `Forms/`) are copied as complete units. Hidden files are skipped.
 
-### Option B: Copy manually
+### Option B: Quick install via curl
+
+Run this command in your 4D project's root directory:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KirkBrooks/AI_Project_Templates/main/install_claude_templates.sh | bash
+```
+
+This downloads all `CLAUDE.md` files and creates the matching folder structure automatically.
+
+### Option C: Copy manually
 
 Copy each `CLAUDE.md` to the matching directory in your 4D project:
 
