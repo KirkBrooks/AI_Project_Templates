@@ -75,8 +75,8 @@ While ($queue.length>0)
 	//  copy all files at this level
 	$files:=$srcDir.files()
 	For each ($f; $files)
-		//  skip hidden/OS metadata files
-		If ($f.fullName[[1]]#".")
+		//  skip hidden/OS metadata files. README and this file
+		If ($f.fullName[[1]]#".") && ($f.fullName[[1]]#"README.md") && ($f.name[[1]]#"Install_AI_Templates")
 			Try
 				$f.copyTo($destDir; $f.fullName; fk overwrite)
 				$filesCopied+=1
