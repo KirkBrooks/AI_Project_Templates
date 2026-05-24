@@ -44,9 +44,10 @@ property _override_file : 4D.File
 
 Class constructor($override)
 	// $override is either a 4D.File or on the folder list
-	Case of 
+
+	Case of
 		: (Value type($override)=Is text)
-			Case of 
+			Case of
 				: ($override="prefs")
 					This._override_file:=This._getUserPrefsFolder().file(".env")
 				: ($override="project")
@@ -57,58 +58,58 @@ Class constructor($override)
 					This._override_file:=Folder(fk user preferences folder; *).file(".env")
 				: ($override="user")
 					This._override_file:=Folder(fk home folder; *).file(".env")
-			End case 
-			
+			End case
+
 		: (Value type($override)=Is object) && (OB Instance of($override; 4D.File))
 			This._override_file:=$override
-			
-	End case 
-	
+
+	End case
+
 	This._getEnvFiles()
-	
+
 Function getEnv($key : Text) : Text
 	$key:=This._normalize_key($key)
 	return This._get_env($key)
-	
+
 Function setEnv($key : Text; $value : Text; $group : Text) : Boolean
 	var $file : 4D.File
-	
+
 	If ($group="")
 		// define the group as the project name
 		$group:=File(Structure file(*); fk platform path).name
-	End if 
-	
+	End if
+
 	If (This._override_file#Null)
 		$file:=This._override_file
-	Else 
+	Else
 		$file:=This._getUserPrefsFolder().file(".env")
-	End if 
-	
+	End if
+
 	$key:=This._normalize_key($key)
-	
+
 	This._write_key_to_file($key; $value; $file; $group)
-	
+
 Function showOnDisk($key : Text)
 	// shows the file the value is coming from
 	// hold shift key to show all the files this key is in
 	var $file : 4D.File
-	
+
 	For each ($file; This.envFiles)
-		
+
 		If (This._get_value_from_file($key; $file)#"")
 			SHOW ON DISK($file.platformPath)
-			
+
 			If (Not(Shift down))
-				return 
-			End if 
-			
-		End if 
-		
-	End for each 
-	
+				return
+			End if
+
+		End if
+
+	End for each
+
 Function updateFiles
 	This._getEnvFiles()
-	
+
 Function listKeys->$keys : Collection
 	// return collection of available keys
 	$keys:=[]
@@ -117,194 +118,219 @@ Function listKeys->$keys : Collection
 		var $col : Collection
 		$col:=This._getFileKeys($file)
 		$keys:=$keys.combine($col)
-	End for each 
-	
+	End for each
+
 	//mark:  --- privates
 Function _write_key_to_file($key : Text; $value : Text; $file : 4D.File; $group : Text) : Boolean
 	//  group is a group line. Will begin with # on file.
 	var $text : Text
 	var $lines : Collection
 	var $i : Integer
-	
+
 	If ($key="") || ($value="")
 		return False
-	End if 
-	
+	End if
+
 	// if the key already exists in the file...
 	If (This._get_value_from_file($key; $file)#"")
 		return This._update_key($key; $value; $file)
-	End if 
-	
+	End if
+
 	$lines:=[]
-	
+
 	If ($file.exists)
 		$text:=$file.getText()
 		$lines:=Split string($text; "\n"; sk trim spaces)  // but leave the empty rows
-	End if 
-	
+	End if
+
 	// is there a group?
 	If ($group#"")
 		If ($group#"#@")
 			$group:="# "+$group  //  must have #
-		End if 
-		
-	Else 
+		End if
+
+	Else
 		$group:="# misc"
-	End if 
-	
+	End if
+
 	$i:=$lines.indexOf($group)
-	
+
 	If ($i=-1)  //  not there - append to collection
 		$lines.push("")
 		$lines.push($group)
 		$i:=$lines.length
-		
+
 	Else   // insert at next empty row
-		
-		Repeat 
+
+		Repeat
 			$i+=1
 		Until ($i=$lines.length) || ($lines[$i]="")
-		
-	End if 
-	
+
+	End if
+
 	$lines[$i]:=$key+"="+$value+Char(10)
-	
+
 	$text:=$lines.join(Char(10))
 	$file.setText($text)
 	return True
-	
+
 Function _update_key($key : Text; $value : Text; $file : 4D.File) : Boolean
 	// use this to prevent duplicating keys
 	var $text : Text
-	
+
 	If ($file=Null) || ($file.exists=False)
 		return False
-	End if 
-	
+	End if
+
 	$text:=This._replace_value_in_text($key; $file.getText(); $value)
 	$file.setText($text)
 	return True
-	
+
 Function _get_env($key : Text)->$env : Text
 	// hunt for a match among the files
 	var $file : 4D.File
-	
+
 	For each ($file; This.envFiles)
 		$env:=This._get_value_from_file($key; $file)
-		
+
 		If ($env#"")
 			return $env
-		End if 
-		
-	End for each 
-	
+		End if
+
+	End for each
+
 Function _get_value_from_file($key : Text; $file : 4D.File) : Text
 	// this method loads the text from the file and looks for the key
-	
+
 	If (Not($file.exists))
 		return ""
-	End if 
-	
+	End if
+
 	return This._get_value_from_text($key; $file.getText())
-	
+
 Function _get_value_from_text($key : Text; $text : Text) : Text
-	ARRAY LONGINT($pos; 0)
-	ARRAY LONGINT($len; 0)
-	var $pattern : Text
-	
-	$pattern:=$key+"=(.+)"
-	
-	If (Match regex($pattern; $text; 1; $pos; $len))
-		return Substring($text; $pos{1}; $len{1})
-	Else 
-		return ""
-	End if 
-	
+	var $line : Text
+	var $lineForMatch : Text
+	var $prefix : Text
+
+	$prefix:=$key+"="
+
+	For each ($line; Split string($text; "\n"; sk trim spaces))
+		$lineForMatch:=$line
+		If ((Length($lineForMatch)>0) && ($lineForMatch[[Length($lineForMatch)]]=Char(13)))
+			$lineForMatch:=Substring($lineForMatch; 1; Length($lineForMatch)-1)
+		End if
+
+		If (Position($prefix; $lineForMatch)=1)
+			return Substring($lineForMatch; Length($prefix)+1)
+		End if
+	End for each
+
+	return ""
+
 Function _replace_value_in_text($key : Text; $text : Text; $value : Text) : Text
-	ARRAY LONGINT($pos; 0)
-	ARRAY LONGINT($len; 0)
-	var $pattern : Text
-	
-	$pattern:=$key+"=(.+)"
-	
-	If (Match regex($pattern; $text; 1; $pos; $len))
-		$text:=Delete string($text; $pos{1}; $len{1})
-		$text:=Insert string($text; $value; $pos{1})
-	End if 
-	
+	var $lines : Collection
+	var $line : Text
+	var $lineForMatch : Text
+	var $prefix : Text
+	var $i : Integer
+	var $hadCR : Boolean
+
+	$prefix:=$key+"="
+	$lines:=Split string($text; "\n"; sk trim spaces)
+
+	For ($i; 0; $lines.length-1)
+		$line:=$lines[$i]
+		$lineForMatch:=$line
+		$hadCR:=False
+
+		If ((Length($lineForMatch)>0) && ($lineForMatch[[Length($lineForMatch)]]=Char(13)))
+			$lineForMatch:=Substring($lineForMatch; 1; Length($lineForMatch)-1)
+			$hadCR:=True
+		End if
+
+		If (Position($prefix; $lineForMatch)=1)
+			$line:=$prefix+$value
+			If ($hadCR)
+				$line+=Char(13)
+			End if
+			$lines[$i]:=$line
+			return $lines.join(Char(10))
+		End if
+	End for
+
 	return $text
-	
+
 Function _getEnvFiles()
 /* This._override_path will be the first file searched
-	
+
 When multiple .env files are found in a location they will
 be listed by:
   environment:  dev; staging; test; prod
   context:      server; local
-	
+
 ex: .env.dev   .env.prod.server
 */
 	var $folder : 4D.Folder
-	
+
 	This.envFiles:=New shared collection()
 	If (This._override_file#Null)
 		This.envFiles.push(This._override_file)
-	End if 
-	
+	End if
+
 	This._appendFolder(This._getUserPrefsFolder())  // user prefs
 	This._appendFolder(Folder(fk database folder; *))  // project dir
 	This._appendFolder(This._getDatafileDirectory())  // datafile dir
 	This._appendFolder(Folder(fk user preferences folder))  //  Users/name/Library/Application Support/4D
 	This._appendFolder(Folder(fk home folder))  //   Users/name
-	
+
 Function _appendFolder($folder : 4D.Folder)
 	//
 	var $col : Collection
-	
+
 	$col:=$folder.files().query("extension = :1"; ".env@").orderBy(ck ascending)
 	If ($col.length>0)
 		This.envFiles:=This.envFiles.concat($col)
-	End if 
-	
+	End if
+
 Function _getUserPrefsFolder->$folder : 4D.Folder
 	var $name : Text
 	$name:="userPreferences."+System info.userName
 	$folder:=Folder(fk database folder; *).folder($name)
 	If (Not($folder.exists))
 		$folder.create()
-	End if 
-	
+	End if
+
 Function _getDatafileDirectory()->$folder : 4D.Folder
 	$folder:=Folder(Folder(Data file; fk platform path).parent.platformPath; fk platform path)
-	
+
 Function _normalize_key($text : Text)->$output : Text
 	var $i : Integer
-	
+
 	$text:=Replace string($text; "-"; "_")
 	$text:=Replace string($text; " "; "_")
-	
+
 	For ($i; 1; Length($text))
 		If (Position($text[[$i]]; "ABCDEFGHIJKLMNOPQRSTUVWXYZ_1234567890")>0)
 			$output+=Uppercase($text[[$i]])
-		End if 
-	End for 
-	
+		End if
+	End for
+
 Function _getFileKeys($file : 4D.File)->$keys : Collection
 	var $lines : Collection
 	var $line : Text
 	var $pos : Integer
-	
+
 	$lines:=Split string($file.getText(); "\n"; sk ignore empty strings)
 	$keys:=[]
-	
+
 	For each ($line; $lines)
 		$pos:=Position("="; $line)
-		Case of 
+		Case of
 			: ($pos=0)
-				
+
 			: ($line="#@")
-			Else 
+			Else
 				$keys.push({path: $file.path; key: Substring($line; 1; $pos-1)})
-		End case 
-	End for each 
-	
+		End case
+	End for each
